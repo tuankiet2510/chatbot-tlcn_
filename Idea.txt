@@ -1,0 +1,55 @@
+- Crawl data from fptshop.com.vn :
+    Truy cập fptshop.com.vn và chọn danh mục như Laptop hay điện thoại
+    VD với điện thoại : 
+    Sau khi chọn danh mục điện thoại tới url https://fptshop.com.vn/dien-thoai
+    Mở devtool chọn Network -> bật filter Fetch/XHR (XMLHttpRequest). Đây là các yêu cầu AJAX (hoặc API request) mà trang web gửi đi khi tải dữ liệu.
+
+
+Đầu tiên khởi chạy app.py : $ chainlit run app.py -w
+trong app.py :
+    Khởi tạo :
+        LiteralClient : Monitor OpenAI API calls , log các API calls vào hệ thống
+        Redis Worker: Khởi động  Redis queue worker với scheduler để xử lý các tác vụ bất đồng bộ và hàng đợi
+        Database Migration: Alembic chạy các migrations , đảm bảo schema database được cập nhật
+Các module cần thiết:
+chainlit_process.authentication: xử lý xác thực người dùng
+chainlit_process.message: xử lý tin nhắn chat 
+
+Khi user gửi message lên UI , Chainlit sẽ trigger decorator @cl.on_message trong chainlit_process.message.py :
+Hàm main() trong message.py được gọi -> gen_answer() trong service.store_chatbot.py được gọi để sinh response gửi đến UI qua send() ->
+-> gọi gen_answer() trong service.store_chatbot.py -> gen_openai_answer() hay gen_answer() trong service.openai.py được gọi sinh trả lời.
+
+gen_answer() trong service.store_chatbot.py :
+- Khởi tạo messages với system prompt
+- Format các history message trên Chainlit UI vào formatted_messages để gửi đến OpenAI API
+- Thêm các instruction prompt như constraint, workflow, initialization vào formatted_messages
+- Gọi đến gen_openai_answer() hay gen_answer() trong service.openai.py để sinh response với formatted_messages và các defined tools : faq_tool, collect_requirement_tool, search_phone_database_tool, collect_user_contact_info_tool
+- Trả về Message object với content là response_text từ gen_openai_answer() hay gen_answer() trong service.openai.py
+
+gen_openai_answer() hay gen_answer() trong service.openai.py :
+- Gọi đến OpenAI API với messages, tools, model, temperature, timeout
+- OpenAI sẽ trả về response với tool_calls nếu có
+    - Nếu không có tool_calls hay tool_choices trả về response.content và temporary_memory và kết thúc
+    - Nếu có tool_calls hay tool_choices và counter < max_iterator = 5 :
+        - append model's function call message's copy vào messages
+        - Gọi đến invoke_tool.py để exec tool và truyền vào tool_response content
+        - append tool_response là 1 ChatCompletionToolMessageParam vào messages
+        - Gọi đến OpenAI API với messages, tools, model, temperature, timeout
+        - OpenAI sẽ trả về response với tool_calls nếu có
+        - counter += 1
+        
+- Tầng model :
+    Định nghĩa cấu trúc dữ liệu và tương tác db thông qua ORM (Object-Relational Mapping)- SQLAlchemy.
+    2 loại model:
+    class Phone(Base) : SQLAlchemy model - interact directly with db
+    class PhoneModel(BaseModel): Pydantic model to Validate n Serialize/Deserialze data 
+    
+
+- Tầng repositories : Các hàm thao tác với data 
+    Xử lý thao tác CRUD với db
+    Method để truy vấn data
+    Quản lý transaction và session db
+
+Service layer (store_chatbot.py , openai) -> Repository layer (phone.py, brand.py) -> Model layer (Phone , Brand, FAQ..) -> DB
+
+

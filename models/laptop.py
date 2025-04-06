@@ -5,6 +5,7 @@ from sqlalchemy import Text, DateTime, JSON
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from pydantic import BaseModel, ConfigDict
 from pgvector.sqlalchemy import Vector
+from env import env
 
 class Laptop(Base):
     __tablename__ = "laptops"
@@ -28,6 +29,43 @@ class Laptop(Base):
         default=datetime.now(timezone.utc),
         onupdate=datetime.now(timezone.utc),
     )
+
+    
+
+class CreateLaptopModel(BaseModel):
+    id: str
+    data: dict = {}
+    name: str
+    slug: str
+    brand_code: str
+    product_type: str
+    description: str
+    promotions: list[dict]
+    skus: list[dict]
+    key_selling_points: list[dict]
+    price: int
+    score: float
+    name_embedding: list[float]
+
+class LaptopModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)  # allow pydantic model to populate its fields from SQLAlchemy ORM model
+
+    id: str
+    data: dict = {}
+    name: str
+    slug: str
+    brand_code: str
+    product_type: str
+    description: str
+    promotions: list[dict]
+    skus: list[dict]
+    key_selling_points: list[dict]
+    price: int
+    score: float
+    name_embedding: list[float]
+    created_at: datetime
+    updated_at: datetime
+
 
     def _get_original_price(self) -> int:
         return self.data.get("originalPrice", 0)
@@ -122,37 +160,3 @@ class Laptop(Base):
             result += f"- Description: [{self.description}]"
 
         return result
-
-class CreateLaptopModel(BaseModel):
-    id: str
-    data: dict = {}
-    name: str
-    slug: str
-    brand_code: str
-    product_type: str
-    description: str
-    promotions: list[dict]
-    skus: list[dict]
-    key_selling_points: list[dict]
-    price: int
-    score: float
-    name_embedding: list[float]
-
-class LaptopModel(BaseModel):
-    model_config = ConfigDict(from_attributes=True)  # allow pydantic model to populate its fields from SQLAlchemy ORM model
-
-    id: str
-    data: dict = {}
-    name: str
-    slug: str
-    brand_code: str
-    product_type: str
-    description: str
-    promotions: list[dict]
-    skus: list[dict]
-    key_selling_points: list[dict]
-    price: int
-    score: float
-    name_embedding: list[float]
-    created_at: datetime
-    updated_at: datetime

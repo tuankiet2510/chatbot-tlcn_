@@ -9,8 +9,8 @@ from pgvector.sqlalchemy import Vector
 class Brand(Base):
     __tablename__ = "brands"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, nullable=False)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    id: Mapped[str] = mapped_column(String, primary_key=True, nullable=False) #brand_code
+    name: Mapped[str] = mapped_column(String, nullable=False) #brand_name
     embedding: Mapped[list[float]] = mapped_column(Vector, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now(timezone.utc)

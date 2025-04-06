@@ -52,7 +52,7 @@ def gen_answer(
         counter += 1
         
         print("counter:", counter) 
-        # append model's function call message's copy
+        # append model's function call response message's copy
         messages.append(response.model_copy())  # type: ignore
         print("\n\n==== tool_calls ====\n\n")
         for tool in tool_choices:

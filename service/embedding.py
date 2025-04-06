@@ -5,7 +5,7 @@ import chainlit as cl
 _client = OpenAI(api_key=env.OPENAI_API_KEY)
 _model = "text-embedding-3-small"
 
-
+# embedding faq (question + anwser) , phone data, brand data, laptop data
 def get_embedding(text, model=_model):
     text = text.replace("\n", " ")
     return _client.embeddings.create(input=[text], model=model).data[0].embedding
